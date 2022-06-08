@@ -436,6 +436,30 @@ impl Board {
                         Err(_) => {}
                     }
                 }
+
+                // En Passant rule
+                for column_offset in [-1, 1] {
+                    match coordinate.checked_add_individual(0, column_offset) {
+                        Ok(single_coordinate) => {
+                            match self.get_piece(&single_coordinate) {
+                                Some(other_piece) => { 
+                                    if other_piece.number_of_moves() == 1 && matches!(other_piece.class(), PieceClass::Pawn) {
+                                        if other_piece.team() != piece.team() {
+                                            legal_moves.insert(
+                                                single_coordinate.checked_add_individual(single_pawn_move, 0).unwrap(),
+                                                Some(single_coordinate.clone()),
+                                            );
+                                        }
+                                    }
+                                }
+                                None => {
+                                    legal_moves.insert(single_coordinate, None);
+                                }
+                            }
+                        },
+                        Err(_) => {}
+                    }
+                }
             } 
         }
 
