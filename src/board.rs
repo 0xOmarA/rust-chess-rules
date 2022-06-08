@@ -162,6 +162,12 @@ impl Board {
             // Toggle the teams
             self.toggle_turn_to_play();
 
+            // If an upgrade can happen, then switch the pawn with a queen.
+            // TODO: Add a way to select what gets promoted.
+            if (to.row() == 0 || to.row() == 7) && matches!(piece.class(), PieceClass::Pawn) {
+                self.set_piece(to, Some(Piece::new(PieceClass::Queen, piece.team())));
+            }
+
             Ok(())
         } else {
             Err(BoardError::IllegalMove)
