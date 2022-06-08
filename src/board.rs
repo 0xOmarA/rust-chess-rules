@@ -1,7 +1,8 @@
 use crate::coordinate::{Coordinate, CoordinatePath};
 use crate::piece::{Piece, PieceClass, Team};
-use itertools::Itertools;
 use std::collections::HashMap;
+use itertools::Itertools;
+use regex::Regex;
 
 /// Represents the current chess board with all of its pieces
 #[derive(Debug)]
@@ -59,6 +60,32 @@ impl Board {
         }
 
         board
+    }
+
+    pub fn new_with_fen(fen: Fen) -> Self {
+        let mut board: Self = Default::default();
+
+        let board_pieces_state: String = fen.board_pieces_state();
+        for (row_index, row_data) in board_pieces_state.split('/').enumerate() {
+            let mut column_index: usize = 0;
+            for char in row_data.chars() {
+                if char.is_alphabetic() {
+                    let piece: Piece = Piece::try_from(char).unwrap();
+                    board.set_piece(&Coordinate::try_from((row_index, column_index)).unwrap(), Some(piece));
+                    column_index += 1;
+                } else if char.is_numeric() {
+                    let amount: u32 = char.to_digit(10).unwrap();
+                    for _ in 0..amount {
+                        board.set_piece(&Coordinate::try_from((row_index, column_index)).unwrap(), None);
+                        column_index += 1;
+                    }
+                } else {
+                    panic!("Got a symbol in the FEN");
+                }
+            }
+        }
+
+        return board
     }
 
     pub fn try_new_with_history(history: Vec<HistoryNode>) -> Result<Self, BoardError> {
@@ -493,6 +520,49 @@ impl Board {
             panic!("Impossible case")
         }
     }
+
+    pub fn fen(&self) -> Fen {
+        let mut fen_string: String = String::new();
+
+        // Adding the row states
+        for row in self.map() {
+            for item in row.iter() {
+                match item {
+                    Some(piece) => {
+                        fen_string.push(piece.clone().into())
+                    },
+                    None => { fen_string.push('1') }
+                }
+            }
+            fen_string.push('/');
+        }
+        fen_string = fen_string.trim_end_matches(&['/']).to_string();
+
+        // Find all of the repeating ones and replace them with their total
+        let re: Regex = Regex::new(r"(1+)").unwrap();
+        let replacement_map: Vec<(String, usize)> = re.find_iter(&fen_string)
+            .filter_map(|digits| digits.as_str().parse().ok())
+            .map(|x: String| (x.clone(), x.len()))
+            .unique()
+            .sorted_by(|a, b| a.1.cmp(&b.1))
+            .rev()
+            .collect();
+        
+        for (key, value) in replacement_map.iter() {
+            fen_string = fen_string.replace(key, value.to_string().as_str()).to_string();
+        }
+        
+        // Adding the final additional information
+        fen_string.push(' ');
+        match self.turn_to_play {
+            Team::White => fen_string.push('w'),
+            Team::Black => fen_string.push('b'),
+        }
+
+        fen_string.push_str(format!(" - - 0 {}", self.history.len() + 1).as_str());
+
+        Fen { state: fen_string }
+    }
 }
 
 impl Default for Board {
@@ -550,4 +620,16 @@ pub struct HistoryNode {
     pub piece: Piece,
     pub from: Coordinate,
     pub to: Coordinate,
+}
+
+/// A Fen representation of the state of a chess board
+#[derive(Debug)]
+pub struct Fen {
+    pub state: String
+}
+
+impl Fen {
+    pub fn board_pieces_state(&self) -> String {
+        self.state.split(' ').nth(0).unwrap().to_string()
+    }
 }
