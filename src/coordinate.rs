@@ -51,8 +51,6 @@ impl Coordinate {
         let row: i8 = self.row as i8 + row;
         let column: i8 = self.column as i8 + column;
 
-        println!("Checked add individual with: \nself row: {}, self column: {}\ncalculated row: {}, calculated column: {}", self.row, self.column, row, column);
-
         if !self.valid_within_board_bound(row) || !self.valid_within_board_bound(column) {
             Err(CoordinateError::CoordinateOverflow)
         } else {
@@ -82,7 +80,6 @@ impl Coordinate {
     }
 
     fn valid_within_board_bound(&self, number: i8) -> bool {
-        println!("Got number: {}, and result is: {}", number, 0 <= number && number < 8);
         0 <= number && number < 8
     }
 }

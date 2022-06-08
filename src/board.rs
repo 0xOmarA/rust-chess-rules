@@ -85,7 +85,7 @@ impl Board {
         to: &Coordinate
     ) -> Result<(), BoardError> {
         // Getting the piece at the specified coordinate.
-        let piece: Piece = {
+        let mut piece: Piece = {
             match self.get_piece(from) {
                 Some(piece) => Ok(piece),
                 None => Err(BoardError::EmptyCoordinate),
@@ -93,9 +93,7 @@ impl Board {
         }?;
 
         // Getting all of the legal moves for this piece
-        println!("Before legal move calculation");
         let legal_moves: HashMap<Coordinate, Option<Coordinate>> = self.piece_legal_moves(from).unwrap();
-        println!("Legal moves are: {:?}", legal_moves);
 
         // If true, then this is a legal move and we can go ahead with the removal of the old item.
         if legal_moves.contains_key(to) {
@@ -108,12 +106,12 @@ impl Board {
             }
 
             // Perform the move operation
+            piece.add_move();
             self.set_piece(to, Some(piece));
             self.set_piece(from, None);
 
             Ok(())
         } else {
-            println!("Does not contain key");
             Err(BoardError::IllegalMove)
         }
     }
@@ -336,12 +334,14 @@ impl Board {
                 };
 
                 // Single pawn move
+                let mut is_single_move_legal: bool = false;
                 match coordinate.checked_add_individual(single_pawn_move, 0) {
                     Ok(single_coordinate) => {
                         match self.get_piece(&single_coordinate) {
                             Some(_) => { }
                             None => {
                                 legal_moves.insert(single_coordinate, None);
+                                is_single_move_legal = true;
                             }
                         }
                     },
@@ -349,7 +349,7 @@ impl Board {
                 }
 
                 // Two pawn move
-                if piece.is_first_move() {
+                if piece.is_first_move() && is_single_move_legal {
                     match coordinate.checked_add_individual(single_pawn_move * 2, 0) {
                         Ok(single_coordinate) => {
                             match self.get_piece(&single_coordinate) {

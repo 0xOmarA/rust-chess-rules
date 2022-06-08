@@ -50,6 +50,10 @@ impl Piece {
     pub fn is_first_move(&self) -> bool {
         return self.number_of_moves == 0;
     }
+
+    pub fn add_move(&mut self) {
+        self.number_of_moves += 1;
+    }
 }
 
 impl std::fmt::Display for Piece {
