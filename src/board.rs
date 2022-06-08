@@ -108,7 +108,7 @@ impl Board {
         self.turn_to_play
     }
 
-    pub fn toggle_turn_to_play(&mut self) {
+    fn toggle_turn_to_play(&mut self) {
         self.turn_to_play = match self.turn_to_play {
             Team::White => Team::Black,
             Team::Black => Team::White
