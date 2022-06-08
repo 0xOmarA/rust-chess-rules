@@ -1,5 +1,5 @@
 /// Represents the class that a specific chess piece belongs to
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 #[repr(u8)]
 pub enum PieceClass {
     King,
@@ -11,7 +11,7 @@ pub enum PieceClass {
 }
 
 /// Represents the two teams which can exist in a game of chess
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[repr(u8)]
 pub enum Team {
     Black,

@@ -11,6 +11,9 @@ pub struct Board {
 
     /// A graveyard for all of the pieces which have been removed.
     graveyard: Vec<Piece>,
+
+    /// The total number of moves which have been made on the board by each team
+    team_moves: HashMap<Team, u16>
 }
 
 impl Board {
@@ -77,6 +80,14 @@ impl Board {
         self.map
     }
 
+    pub fn graveyard(&self) -> Vec<Piece> {
+        self.graveyard.clone()
+    }
+
+    pub fn team_moves(&self) -> HashMap<Team, u16> {
+        self.team_moves.clone()
+    }
+
     /// Moves a piece from one coordinate to another coordinate. Checks that the move is legal before performing the 
     /// move.
     pub fn move_piece(
@@ -109,6 +120,9 @@ impl Board {
             piece.add_move();
             self.set_piece(to, Some(piece));
             self.set_piece(from, None);
+
+            // Adding this move to the total number of moves made
+            *self.team_moves.get_mut(&piece.team()).unwrap() += 1;
 
             Ok(())
         } else {
@@ -394,9 +408,14 @@ impl Board {
 impl Default for Board {
     /// Creates a new empty vault
     fn default() -> Self {
+        let mut default_hashmap: HashMap<Team, u16> = HashMap::new();
+        default_hashmap.insert(Team::Black, 0);
+        default_hashmap.insert(Team::White, 0);
+
         Self {
             map: Default::default(),
             graveyard: Vec::new(),
+            team_moves: default_hashmap
         }
     }
 }
