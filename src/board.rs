@@ -16,7 +16,10 @@ pub struct Board {
     team_moves: HashMap<Team, u16>,
 
     /// Multiple history nodes which together create a history of all of the actions which happened on the board.
-    history: Vec<HistoryNode>
+    history: Vec<HistoryNode>,
+
+    /// Represents the team which has the turn to play.
+    turn_to_play: Team
 }
 
 impl Board {
@@ -101,6 +104,17 @@ impl Board {
         self.team_moves.clone()
     }
 
+    pub fn turn_to_play(&self) -> Team {
+        self.turn_to_play
+    }
+
+    pub fn toggle_turn_to_play(&mut self) {
+        self.turn_to_play = match self.turn_to_play {
+            Team::White => Team::Black,
+            Team::Black => Team::White
+        }
+    }
+
     /// Moves a piece from one coordinate to another coordinate. Checks that the move is legal before performing the 
     /// move.
     pub fn move_piece(
@@ -115,6 +129,11 @@ impl Board {
                 None => Err(BoardError::EmptyCoordinate),
             }
         }?;
+
+        // Check if this piece is of the team that is currently allowed to play, if not then return an error
+        if piece.team() != self.turn_to_play {
+            return Err(BoardError::OtherTeamPiece)
+        }
 
         // Getting all of the legal moves for this piece
         let legal_moves: HashMap<Coordinate, Option<Coordinate>> = self.piece_legal_moves(from).unwrap();
@@ -139,6 +158,9 @@ impl Board {
 
             // Adding the move to the history of the match
             self.history.push(HistoryNode { piece: piece, from: from.clone(), to: to.clone() });
+
+            // Toggle the teams
+            self.toggle_turn_to_play();
 
             Ok(())
         } else {
@@ -433,6 +455,7 @@ impl Default for Board {
             graveyard: Vec::new(),
             team_moves: default_hashmap,
             history: Vec::new(),
+            turn_to_play: Team::White
         }
     }
 }
@@ -440,7 +463,8 @@ impl Default for Board {
 #[derive(Debug)]
 pub enum BoardError {
     EmptyCoordinate,
-    IllegalMove
+    IllegalMove,
+    OtherTeamPiece
 }
 
 impl std::fmt::Display for Board {
