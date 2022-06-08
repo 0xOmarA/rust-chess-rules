@@ -13,7 +13,10 @@ pub struct Board {
     graveyard: Vec<Piece>,
 
     /// The total number of moves which have been made on the board by each team
-    team_moves: HashMap<Team, u16>
+    team_moves: HashMap<Team, u16>,
+
+    /// Multiple history nodes which together create a history of all of the actions which happened on the board.
+    history: Vec<HistoryNode>
 }
 
 impl Board {
@@ -54,6 +57,16 @@ impl Board {
 
         board
     }
+
+    pub fn try_new_with_history(history: Vec<HistoryNode>) -> Result<Self, BoardError> {
+        let mut board: Self = Self::new();
+
+        for node in history.iter() {
+            board.move_piece(&node.from, &node.to)?;
+        }
+
+        Ok(board)
+    } 
 
     fn remove_piece(&mut self, coordinate: &Coordinate) -> Result<(), BoardError> {
         let piece: Option<Piece> = self.get_piece(coordinate);
@@ -123,6 +136,9 @@ impl Board {
 
             // Adding this move to the total number of moves made
             *self.team_moves.get_mut(&piece.team()).unwrap() += 1;
+
+            // Adding the move to the history of the match
+            self.history.push(HistoryNode { piece: piece, from: from.clone(), to: to.clone() });
 
             Ok(())
         } else {
@@ -415,7 +431,8 @@ impl Default for Board {
         Self {
             map: Default::default(),
             graveyard: Vec::new(),
-            team_moves: default_hashmap
+            team_moves: default_hashmap,
+            history: Vec::new(),
         }
     }
 }
@@ -449,4 +466,12 @@ impl std::fmt::Display for Board {
         }
         std::fmt::Result::Ok(())
     }
+}
+
+/// Represents a point in the history of the game with information on which pieces moved to which locations
+#[derive(Debug)]
+pub struct HistoryNode {
+    pub piece: Piece,
+    pub from: Coordinate,
+    pub to: Coordinate,
 }
