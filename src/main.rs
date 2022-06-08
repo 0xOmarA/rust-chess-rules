@@ -15,10 +15,6 @@ fn main() {
     let to: Coordinate = Coordinate::try_from("E5").unwrap();
     println!("Response is: {:?}", board.move_piece(&from, &to));
     
-    let from: Coordinate = Coordinate::try_from("E5").unwrap();
-    let to: Coordinate = Coordinate::try_from("E6").unwrap();
-    println!("Response is: {:?}", board.move_piece(&from, &to));
-    
     let from: Coordinate = Coordinate::try_from("E7").unwrap();
     let to: Coordinate = Coordinate::try_from("E5").unwrap();
     println!("Response is: {:?}", board.move_piece(&from, &to));

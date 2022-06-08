@@ -132,7 +132,7 @@ impl Board {
 
         // Check if this piece is of the team that is currently allowed to play, if not then return an error
         if piece.team() != self.turn_to_play {
-            return Err(BoardError::OtherTeamPiece)
+            return Err(BoardError::NotYourTurn)
         }
 
         // Getting all of the legal moves for this piece
@@ -465,6 +465,28 @@ impl Board {
 
         return Ok(legal_moves);
     }
+
+    /// Checks if a winner is ready to be declared, declares them the winner, and returns the team which won.
+    pub fn winner(&self) -> Option<Team> {
+        let kings: Vec<Piece> = self.map
+            .iter()
+            .flatten()
+            .cloned()
+            .filter(|x| x.is_some())
+            .map(|x| x.unwrap())
+            .filter(|x| matches!(x.class(), PieceClass::King))
+            .collect::<Vec<Piece>>();
+
+        // Do we have two kings? If so then no winner can be declared
+        if kings.len() == 2 {
+            None
+        } else if kings.len() == 1 {
+            let king: Piece = *kings.get(0).unwrap();
+            Some(king.team())
+        } else {
+            panic!("Impossible case")
+        }
+    }
 }
 
 impl Default for Board {
@@ -488,7 +510,7 @@ impl Default for Board {
 pub enum BoardError {
     EmptyCoordinate,
     IllegalMove,
-    OtherTeamPiece
+    NotYourTurn
 }
 
 impl std::fmt::Display for Board {
