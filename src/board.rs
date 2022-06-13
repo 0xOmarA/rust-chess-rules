@@ -3,9 +3,11 @@ use crate::piece::{Piece, PieceClass, Team};
 use std::collections::HashMap;
 use itertools::Itertools;
 use regex::Regex;
+use sbor::Decode;
+use scrypto::prelude::*;
 
 /// Represents the current chess board with all of its pieces
-#[derive(Debug)]
+#[derive(Debug, Encode, Decode, TypeId, Describe)]
 pub struct Board {
     /// A two dimensional array of the actual board.
     map: [[Option<Piece>; 8]; 8],
@@ -85,6 +87,10 @@ impl Board {
             }
         }
 
+        if fen.current_team_turn() != board.turn_to_play() {
+            board.toggle_turn_to_play();
+        }
+
         return board
     }
 
@@ -139,6 +145,13 @@ impl Board {
         self.turn_to_play = match self.turn_to_play {
             Team::White => Team::Black,
             Team::Black => Team::White
+        }
+    }
+
+    pub fn team_at_coordinate(&self, coordinate: &Coordinate) -> Option<Team> {
+        match self.get_piece(coordinate) {
+            Some(piece) => Some(piece.team()),
+            None => None
         }
     }
 
@@ -615,7 +628,7 @@ impl std::fmt::Display for Board {
 }
 
 /// Represents a point in the history of the game with information on which pieces moved to which locations
-#[derive(Debug)]
+#[derive(Debug, Encode, Decode, TypeId, Describe)]
 pub struct HistoryNode {
     pub piece: Piece,
     pub from: Coordinate,
@@ -631,5 +644,14 @@ pub struct Fen {
 impl Fen {
     pub fn board_pieces_state(&self) -> String {
         self.state.split(' ').nth(0).unwrap().to_string()
+    }
+
+    // TODO: this should return a result team to handle the case of incorrect character
+    pub fn current_team_turn(&self) -> Team {
+        match self.state.split(' ').nth(1).unwrap().to_string().chars().nth(0).unwrap() {
+            'w' | 'W' => Team::White,
+            'b' | 'B' => Team::Black,
+            _ => panic!("Invalid team")
+        }
     }
 }

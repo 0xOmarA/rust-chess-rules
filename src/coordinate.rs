@@ -1,10 +1,12 @@
+use scrypto::prelude::*;
+
 pub type CoordinatePath = Vec<Coordinate>;
 
 /// A struct that represents a coordinate in the chess board. Implements a number of useful methods and traits that allow
 /// this struct to be initialized from different types.
 ///
 /// A coordinate is designed such that it is always correct and can not be invalid for any 8x8 chess board.
-#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Hash, PartialEq, Eq, Clone, Copy, Encode, Decode, TypeId, Describe)]
 pub struct Coordinate {
     row: u8,
     column: u8,
