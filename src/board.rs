@@ -474,9 +474,7 @@ impl Board {
                                         );
                                     }
                                 }
-                                None => {
-                                    legal_moves.insert(single_coordinate, None);
-                                }
+                                None => {}
                             }
                         },
                         Err(_) => {}
@@ -636,7 +634,7 @@ pub struct HistoryNode {
 }
 
 /// A Fen representation of the state of a chess board
-#[derive(Debug)]
+#[derive(Debug, Encode, Decode, TypeId, Describe)]
 pub struct Fen {
     pub state: String
 }
@@ -654,4 +652,16 @@ impl Fen {
             _ => panic!("Invalid team")
         }
     }
+}
+
+#[derive(Debug, Encode, Decode, TypeId, Describe)]
+pub enum GameState {
+    // Denotes a check in a game of chess. The team in this enum is the team whose king is in check.
+    Check(Team),
+    
+    // Denotes a checkmate in a game of chess. The team in this enum is the team whose king is in a checkmate.
+    CheckMate(Team),
+
+    // Used when the opponents and not playing in a state of check or checkmate.
+    Playing,
 }
