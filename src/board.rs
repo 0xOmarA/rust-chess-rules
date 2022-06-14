@@ -26,6 +26,10 @@ pub struct Board {
 }
 
 impl Board {
+    /// ================================================================================================================
+    /// Functions used in instantiating a new board
+    /// ================================================================================================================
+    
     /// Creates a new default board
     pub fn new() -> Self {
         let mut board: Self = Self::default();
@@ -104,26 +108,9 @@ impl Board {
         Ok(board)
     } 
 
-    fn remove_piece(&mut self, coordinate: &Coordinate) -> Result<(), BoardError> {
-        let piece: Option<Piece> = self.get_piece(coordinate);
-
-        match piece {
-            Some(piece) => {
-                self.graveyard.push(piece);
-                self.set_piece(coordinate, None);
-                Ok(())
-            }
-            None => Err(BoardError::EmptyCoordinate),
-        }
-    }
-
-    fn set_piece(&mut self, coordinate: &Coordinate, piece: Option<Piece>) {
-        self.map[coordinate.row()][coordinate.column()] = piece;
-    }
-
-    pub fn get_piece(&self, coordinate: &Coordinate) -> Option<Piece> {
-        self.map[coordinate.row()][coordinate.column()]
-    }
+    /// ================================================================================================================
+    /// Getter methods for the board state and other retrieval operations
+    /// ================================================================================================================
 
     pub fn map(&self) -> [[Option<Piece>; 8]; 8] {
         self.map
@@ -137,15 +124,12 @@ impl Board {
         self.team_moves.clone()
     }
 
-    pub fn turn_to_play(&self) -> Team {
-        self.turn_to_play
+    pub fn history(&self) -> Vec<HistoryNode> {
+        self.history.clone()
     }
 
-    fn toggle_turn_to_play(&mut self) {
-        self.turn_to_play = match self.turn_to_play {
-            Team::White => Team::Black,
-            Team::Black => Team::White
-        }
+    pub fn turn_to_play(&self) -> Team {
+        self.turn_to_play
     }
 
     pub fn team_at_coordinate(&self, coordinate: &Coordinate) -> Option<Team> {
@@ -154,6 +138,40 @@ impl Board {
             None => None
         }
     }
+
+    pub fn get_piece(&self, coordinate: &Coordinate) -> Option<Piece> {
+        self.map[coordinate.row()][coordinate.column()]
+    }
+
+    /// ================================================================================================================
+    /// Setter methods and state modifying methods
+    /// ================================================================================================================
+
+    fn toggle_turn_to_play(&mut self) {
+        self.turn_to_play = self.turn_to_play.other()
+    }
+
+    fn set_piece(&mut self, coordinate: &Coordinate, piece: Option<Piece>) {
+        self.map[coordinate.row()][coordinate.column()] = piece;
+    }
+
+    fn remove_piece(&mut self, coordinate: &Coordinate) -> Result<(), BoardError> {
+        let piece: Option<Piece> = self.get_piece(coordinate);
+
+        match piece {
+            Some(piece) => {
+                self.graveyard.push(piece);
+                self.set_piece(coordinate, None);
+                Ok(())
+            }
+            None => Err(BoardError::EmptyCoordinate),
+        }
+    }
+
+    /// ================================================================================================================
+    /// Operation methods essential for the correct operation and main logic of the board
+    /// ================================================================================================================
+    
 
     /// Moves a piece from one coordinate to another coordinate. Checks that the move is legal before performing the 
     /// move.
@@ -510,28 +528,9 @@ impl Board {
         return Ok(legal_moves);
     }
 
-    /// Checks if a winner is ready to be declared, declares them the winner, and returns the team which won.
-    pub fn winner(&self) -> Option<Team> {
-        let kings: Vec<Piece> = self.map
-            .iter()
-            .flatten()
-            .cloned()
-            .filter(|x| x.is_some())
-            .map(|x| x.unwrap())
-            .filter(|x| matches!(x.class(), PieceClass::King))
-            .collect::<Vec<Piece>>();
-
-        // Do we have two kings? If so then no winner can be declared
-        if kings.len() == 2 {
-            None
-        } else if kings.len() == 1 {
-            let king: Piece = *kings.get(0).unwrap();
-            Some(king.team())
-        } else {
-            panic!("Impossible case")
-        }
-    }
-
+    /// ================================================================================================================
+    /// Utility methods and methods useful to have.
+    /// ================================================================================================================
     pub fn fen(&self) -> Fen {
         let mut fen_string: String = String::new();
 
@@ -574,6 +573,10 @@ impl Board {
 
         Fen { state: fen_string }
     }
+
+    // ================================================================================================================
+    // Misc Methods
+    // ================================================================================================================
 }
 
 impl Default for Board {
@@ -626,7 +629,7 @@ impl std::fmt::Display for Board {
 }
 
 /// Represents a point in the history of the game with information on which pieces moved to which locations
-#[derive(Debug, Encode, Decode, TypeId, Describe)]
+#[derive(Debug, Encode, Decode, TypeId, Describe, Clone)]
 pub struct HistoryNode {
     pub piece: Piece,
     pub from: Coordinate,

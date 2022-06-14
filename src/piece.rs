@@ -20,6 +20,15 @@ pub enum Team {
     White,
 }
 
+impl Team {
+    pub fn other(&self) -> Self {
+        match self {
+            Self::Black => Self::White,
+            Self::White => Self::Black
+        }
+    }
+}
+
 /// Represents a chess piece belonging to a specific team
 #[derive(Debug, Clone, Copy, Encode, Decode, TypeId, Describe)]
 pub struct Piece {
