@@ -209,38 +209,6 @@ impl Board {
         }
     }
 
-    // fn is_check(&self, coordinate: &Coordinate) -> bool {
-    //     // Getting all of the potential places that the enemy pieces can go and therefore endanger
-    //     let endangered_coordinates: Vec<Coordinate> = [PieceClass::Bishop, PieceClass::Knight, PieceClass::King, PieceClass::Queen, PieceClass::Pawn, PieceClass::Rook]
-    //         .iter()
-    //         .map(|x| self.coordinates_of_piece_class_for_team(x, &team.other()))
-    //         .flatten()
-    //         .flat_map(|x| 
-    //             self.piece_legal_moves(&x)
-    //                 .unwrap()
-    //                 .values()
-    //                 .filter_map(|x| x.clone())
-    //                 .collect::<Vec<Coordinate>>()
-    //         )
-    //         .collect();
-
-    //     // Checking the status of the game based on the current coordinates of the king and where it can go.
-    //     if endangered_coordinates.contains(&coordinate) {
-    //         if self.piece_legal_moves(&coordinate)
-    //             .unwrap()
-    //             .values()
-    //             .filter_map(|x| x.clone())
-    //             .all(|x| endangered_coordinates.contains(&x)) 
-    //         {
-    //             GameStatus::CheckMate(team.other())
-    //         } else {
-    //             GameStatus::Check(team.other())
-    //         }
-    //     } else {
-    //         true
-    //     }
-    // }
-
     /// ================================================================================================================
     /// Setter methods and state modifying methods
     /// ================================================================================================================
@@ -624,36 +592,6 @@ impl Board {
 
         return Ok(legal_moves);
     }
-
-    // pub fn piece_legal_moves(
-    //     &self,
-    //     coordinate: &Coordinate,
-    // ) -> Result<HashMap<Coordinate, Option<Coordinate>>, BoardError> {
-    //     // Getting all of the coordinates of the places that this piece can go to.
-    //     let legal_moves: HashMap<Coordinate, Option<Coordinate>> = self.piece_legal_moves_unchecked(coordinate)?;
-
-    //     // Doing simulated boards to check if any of these actions would lead to a checkmate 
-    //     let ret: HashMap<Coordinate, Option<Coordinate>> = legal_moves
-    //         .iter()
-    //         .filter_map(|(to_coordinate, destroyted_coordinate)| {
-    //             let mut simulated_board: Self = self.clone();
-    //             let piece: Piece = simulated_board.piece(coordinate).unwrap();
-
-    //             match simulated_board.move_piece(coordinate, to_coordinate) {
-    //                 Ok(()) => {
-    //                     match simulated_board.team_game_status(piece.team()) {
-    //                         GameStatus::None => Some((to_coordinate.clone(), destroyted_coordinate.clone())),
-    //                         _ => None
-    //                     }
-    //                     // 
-    //                 },
-    //                 Err(_) => None
-    //             }
-    //         })
-    //         .collect();
-
-    //     return Ok(ret);
-    // }
 
     /// ================================================================================================================
     /// Utility methods and methods useful to have.
