@@ -20,21 +20,19 @@ resim transfer 1 $player $account2
 
 # At this point account1 is the White Team, and Account 2 is the Black Team
 resim set-default-account $account1 $privkey1
-resim call-method $component move_piece "A2" "A4" 1,$player
+resim call-method $component move_piece "E2" "E4" 1,$player
 resim set-default-account $account2 $privkey2
-resim call-method $component move_piece "A7" "A5" 1,$player
+resim call-method $component move_piece "E7" "E5" 1,$player
 
 resim set-default-account $account1 $privkey1
-resim call-method $component move_piece "B2" "B4" 1,$player
+resim call-method $component move_piece "F1" "C4" 1,$player
 resim set-default-account $account2 $privkey2
-resim call-method $component move_piece "B7" "B5" 1,$player
+resim call-method $component move_piece "B8" "C6" 1,$player
 
 resim set-default-account $account1 $privkey1
-resim call-method $component move_piece "C1" "A3" 1,$player
+resim call-method $component move_piece "C4" "F7" 1,$player
 resim set-default-account $account2 $privkey2
-resim call-method $component move_piece "C7" "C5" 1,$player
+resim call-method $component move_piece "E8" "F7" 1,$player
 
 resim set-default-account $account1 $privkey1
-resim call-method $component move_piece "B4" "C5" 1,$player
-resim set-default-account $account2 $privkey2
-resim call-method $component move_piece "D7" "D5" 1,$player
+resim call-method $component move_piece "D1" "F3" 1,$player

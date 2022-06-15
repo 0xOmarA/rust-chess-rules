@@ -43,8 +43,8 @@ impl Board {
                 PieceClass::Rook,
                 PieceClass::Knight,
                 PieceClass::Bishop,
-                PieceClass::King,
                 PieceClass::Queen,
+                PieceClass::King,
                 PieceClass::Bishop,
                 PieceClass::Knight,
                 PieceClass::Rook,
@@ -209,7 +209,8 @@ impl Board {
                 .unwrap()
                 .values()
                 .filter_map(|x| x.clone())
-                .all(|x| endangered_coordinates.contains(&x)) 
+                .map(|x| endangered_coordinates.contains(&x))
+                .any(|x| !x)
             {
                 GameStatus::CheckMate(team)
             } else {
