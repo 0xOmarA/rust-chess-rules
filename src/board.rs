@@ -98,6 +98,14 @@ impl Board {
         return board
     }
 
+    pub fn new_with_map(map: &[[Option<Piece>; 8]; 8]) -> Self {
+        let mut board: Self = Default::default();
+
+        board.map = map.clone();
+
+        board
+    }
+
     pub fn try_new_with_history(history: Vec<HistoryNode>) -> Result<Self, BoardError> {
         let mut board: Self = Self::new();
 
@@ -184,7 +192,7 @@ impl Board {
             .map(|x| self.coordinates_of_piece_class_for_team(x, &team.other()))
             .flatten()
             .flat_map(|x| 
-                self.piece_legal_moves(&x)
+                self.piece_legal_moves(&x, true)
                     .unwrap()
                     .values()
                     .filter_map(|x| x.clone())
@@ -194,15 +202,15 @@ impl Board {
 
         // Checking the status of the game based on the current coordinates of the king and where it can go.
         if endangered_coordinates.contains(&king_coordinate) {
-            if self.piece_legal_moves(&king_coordinate)
+            if self.piece_legal_moves(&king_coordinate, true)
                 .unwrap()
                 .values()
                 .filter_map(|x| x.clone())
                 .all(|x| endangered_coordinates.contains(&x)) 
             {
-                GameStatus::CheckMate(team.other())
+                GameStatus::CheckMate(team)
             } else {
-                GameStatus::Check(team.other())
+                GameStatus::Check(team)
             }
         } else {
             GameStatus::None
@@ -259,7 +267,7 @@ impl Board {
         }
 
         // Getting all of the legal moves for this piece
-        let legal_moves: HashMap<Coordinate, Option<Coordinate>> = self.piece_legal_moves(from).unwrap();
+        let legal_moves: HashMap<Coordinate, Option<Coordinate>> = self.piece_legal_moves(from, true).unwrap();
 
         // If true, then this is a legal move and we can go ahead with the removal of the old item.
         if legal_moves.contains_key(to) {
@@ -309,6 +317,7 @@ impl Board {
     fn piece_legal_moves(
         &self,
         coordinate: &Coordinate,
+        remove_check_possibilities: bool,
     ) -> Result<HashMap<Coordinate, Option<Coordinate>>, BoardError> {
         // Getting the piece at the specified coordinate.
         let piece: Piece = {
@@ -590,7 +599,75 @@ impl Board {
             } 
         }
 
-        return Ok(legal_moves);
+        if remove_check_possibilities {
+            Ok(legal_moves
+                .iter()
+                .filter_map(|(to_coordinate, maybe_destruction_coordinate)| {
+                    let mut simulated_map: [[Option<Piece>; 8]; 8] = self.map().clone();
+    
+                    match maybe_destruction_coordinate {
+                        Some(destruction_coordinate) => {
+                            simulated_map[destruction_coordinate.row()][destruction_coordinate.column()] = None;
+                        },
+                        None => {}
+                    }
+    
+                    simulated_map[to_coordinate.row()][to_coordinate.column()] = simulated_map[coordinate.row()][coordinate.column()];
+                    simulated_map[coordinate.row()][coordinate.column()] = None;
+                    
+                    let simulated_board: Board = Self::new_with_map(&simulated_map);
+    
+                    let endangered_coordinates: Vec<Coordinate> = {
+                        let mut vec: Vec<Coordinate> = Vec::new();
+    
+                        for (i, row) in simulated_board.map().iter().enumerate() {
+                            for (j, other_piece) in row.iter().enumerate() {
+                                match other_piece {
+                                    Some(other_piece) => {
+                                        if other_piece.team() == piece.team().other() {
+                                            vec.push(
+                                                Coordinate::try_from((i, j)).unwrap()
+                                            )
+                                        }
+                                    },
+                                    None => {}
+                                }
+                            }
+                        }
+    
+                        vec
+                    }
+                    .iter()
+                    .map(|x| 
+                        simulated_board
+                            .piece_legal_moves(x, false)
+                            .unwrap()
+                            .values()
+                            .filter(|x| x.is_some())
+                            .map(|x| x.unwrap())
+                            .collect::<Vec<Coordinate>>()
+                    )
+                    .flatten()
+                    .collect();
+    
+                    // Ensure that our team's king is not one of the endangered coordinates
+                    let king_coordinate: Coordinate = simulated_board
+                        .coordinates_of_piece_class_for_team(&PieceClass::King, &piece.team())
+                        .get(0)
+                        .unwrap()
+                        .clone();
+                    
+                    if endangered_coordinates.contains(&king_coordinate) {
+                        None
+                    } else {
+                        Some((to_coordinate.clone(), maybe_destruction_coordinate.clone()))
+                    }
+                })
+                .collect::<HashMap<Coordinate, Option<Coordinate>>>()
+            )
+        } else {
+            Ok(legal_moves)
+        }
     }
 
     /// ================================================================================================================
