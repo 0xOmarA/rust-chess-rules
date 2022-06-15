@@ -22,7 +22,10 @@ pub struct Board {
     history: Vec<HistoryNode>,
 
     /// Represents the team which has the turn to play.
-    turn_to_play: Team
+    turn_to_play: Team,
+
+    /// The team which has won
+    winner: Option<Team>
 }
 
 impl Board {
@@ -217,6 +220,10 @@ impl Board {
         }
     }
 
+    pub fn winner(&self) -> Option<Team> {
+        self.winner
+    }
+
     /// ================================================================================================================
     /// Setter methods and state modifying methods
     /// ================================================================================================================
@@ -297,6 +304,14 @@ impl Board {
             // TODO: Add a way to select what gets promoted.
             if (to.row() == 0 || to.row() == 7) && matches!(piece.class(), PieceClass::Pawn) {
                 self.set_piece(to, Some(Piece::new(PieceClass::Queen, piece.team())));
+            }
+
+            // Check if the other team is in a checkmate 
+            match self.team_game_status(piece.team().other()) {
+                GameStatus::CheckMate(team) => {
+                    self.winner = Some(team.other())
+                },
+                _ => {}
             }
 
             Ok(())
@@ -734,7 +749,8 @@ impl Default for Board {
             graveyard: Vec::new(),
             team_moves: default_hashmap,
             history: Vec::new(),
-            turn_to_play: Team::White
+            turn_to_play: Team::White,
+            winner: None
         }
     }
 }
